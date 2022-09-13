@@ -578,10 +578,10 @@ static void b91_rf_rx_isr(void)
 		}
 
 		/* run filter (check PAN ID and destination address) */
-		if (b91_run_filter(payload, length) == false) {
+		/*if (b91_run_filter(payload, length) == false) {
 			LOG_DBG("Packet received is not addressed to me");
 			goto exit;
-		}
+		}*/
 
 #ifdef CONFIG_OPENTHREAD_FTD
 		bool frame_pending_bit = false;
