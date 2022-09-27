@@ -8,6 +8,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
+#include <zephyr/toolchain/common.h>
 
 
 /* frame control field byte 0 */

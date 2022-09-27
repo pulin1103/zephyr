@@ -528,10 +528,13 @@ static void ALWAYS_INLINE b91_rf_rx_isr(void)
 			}
 #endif /* CONFIG_OPENTHREAD_FTD */
 #if CONFIG_OPENTHREAD_LINK_METRICS_SUBJECT
-			int idx = b91_enh_ack_table_search(data.enh_ack_table,
-				frame.src_addr_ext ? NULL : frame.src_addr,
-				frame.src_addr_ext ? frame.src_addr : NULL);
+			int idx = -1;
 
+			if (frame.general.ver == IEEE802154_FRAME_FCF_VER_2015) {
+				idx = b91_enh_ack_table_search(data.enh_ack_table,
+					frame.src_addr_ext ? NULL : frame.src_addr,
+					frame.src_addr_ext ? frame.src_addr : NULL);
+			}
 			const struct ieee802154_frame ack_frame = {
 				.general = {
 					.valid = true,
