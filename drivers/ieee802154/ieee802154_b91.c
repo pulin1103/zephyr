@@ -465,13 +465,13 @@ ALWAYS_INLINE b91_handle_ack(const struct device *dev, const void *buf, size_t b
 			break;
 		}
 		b91_update_rssi_and_lqi(dev, ack_pkt);
-#ifdef CONFIG_NET_PKT_TIMESTAMP
+#if defined(CONFIG_NET_PKT_TIMESTAMP) && defined(CONFIG_NET_PKT_TXTIME)
 		struct net_ptp_time timestamp = {
 			.second = rx_time / USEC_PER_SEC,
 			.nanosecond = (rx_time % USEC_PER_SEC) * NSEC_PER_USEC
 		};
 		net_pkt_set_timestamp(ack_pkt, &timestamp);
-#endif
+#endif /* CONFIG_NET_PKT_TIMESTAMP && CONFIG_NET_PKT_TXTIME */
 		net_pkt_cursor_init(ack_pkt);
 		if (ieee802154_radio_handle_ack(b91->iface, ack_pkt) != NET_OK) {
 			LOG_INF("ACK packet not handled - releasing.");
@@ -511,13 +511,13 @@ static void ALWAYS_INLINE b91_rf_rx_isr(const struct device *dev)
 	int status = -EINVAL;
 	struct net_pkt *pkt = NULL;
 
-#ifdef CONFIG_NET_PKT_TIMESTAMP
-	uint64_t rx_time = k_ticks_to_us_floor64(k_uptime_ticks());
-	uint32_t rx_timestamp = ZB_RADIO_TIMESTAMP_GET(b91->rx_buffer);
-	uint32_t rx_time_16M = clock_time();
-	uint32_t delta_time = (rx_time_16M - rx_timestamp) / 16;
-	rx_time = rx_time - delta_time;
-#endif /* CONFIG_NET_PKT_TIMESTAMP */
+#if defined(CONFIG_NET_PKT_TIMESTAMP) && defined(CONFIG_NET_PKT_TXTIME)
+	uint64_t rx_time = k_ticks_to_us_near64(k_uptime_ticks());
+	uint32_t delta_time = (clock_time() - ZB_RADIO_TIMESTAMP_GET(b91->rx_buffer)) /
+		SYSTEM_TIMER_TICK_1US;
+
+	rx_time -= delta_time;
+#endif /* CONFIG_NET_PKT_TIMESTAMP && CONFIG_NET_PKT_TXTIME */
 
 	dma_chn_dis(DMA1);
 	rf_clr_irq_status(FLD_RF_IRQ_RX);
@@ -569,11 +569,11 @@ static void ALWAYS_INLINE b91_rf_rx_isr(const struct device *dev)
 		}
 		if (frame.general.type == IEEE802154_FRAME_FCF_TYPE_ACK) {
 			if (b91->ack_handler_en) {
-#ifdef CONFIG_NET_PKT_TIMESTAMP
+#if defined(CONFIG_NET_PKT_TIMESTAMP) && defined(CONFIG_NET_PKT_TXTIME)
 				b91_handle_ack(dev, payload, length, rx_time);
 #else
 				b91_handle_ack(dev, payload, length, 0);
-#endif /* CONFIG_NET_PKT_TIMESTAMP */
+#endif /* CONFIG_NET_PKT_TIMESTAMP && CONFIG_NET_PKT_TXTIME */
 			}
 			break;
 		}
@@ -662,13 +662,13 @@ static void ALWAYS_INLINE b91_rf_rx_isr(const struct device *dev)
 			break;
 		}
 		b91_update_rssi_and_lqi(dev, pkt);
-#ifdef CONFIG_NET_PKT_TIMESTAMP
+#if defined(CONFIG_NET_PKT_TIMESTAMP) && defined(CONFIG_NET_PKT_TXTIME)
 		struct net_ptp_time timestamp = {
 			.second = rx_time / USEC_PER_SEC,
 			.nanosecond = (rx_time % USEC_PER_SEC) * NSEC_PER_USEC
 		};
 		net_pkt_set_timestamp(pkt, &timestamp);
-#endif
+#endif /* CONFIG_NET_PKT_TIMESTAMP && CONFIG_NET_PKT_TXTIME */
 		status = net_recv_data(b91->iface, pkt);
 		if (status < 0) {
 			LOG_ERR("RCV Packet dropped by NET stack: %d", status);
@@ -782,9 +782,9 @@ static enum ieee802154_hw_caps b91_get_capabilities(const struct device *dev)
 		IEEE802154_HW_2_4_GHZ | IEEE802154_HW_FILTER |
 		IEEE802154_HW_TX_RX_ACK;
 
-#ifdef CONFIG_NET_PKT_TXTIME
+#if defined(CONFIG_NET_PKT_TIMESTAMP) && defined(CONFIG_NET_PKT_TXTIME)
 	caps |= IEEE802154_HW_TXTIME;
-#endif /* CONFIG_NET_PKT_TXTIME */
+#endif /* CONFIG_NET_PKT_TIMESTAMP && CONFIG_NET_PKT_TXTIME */
 	return caps;
 }
 
@@ -920,12 +920,12 @@ static int b91_tx(const struct device *dev,
 	struct b91_data *b91 = dev->data;
 
 	/* check for supported mode */
-#ifdef CONFIG_NET_PKT_TXTIME
+#if defined(CONFIG_NET_PKT_TIMESTAMP) && defined(CONFIG_NET_PKT_TXTIME)
 	if (mode != IEEE802154_TX_MODE_DIRECT &&
 		mode != IEEE802154_TX_MODE_TXTIME_CCA) {
 #else
 	if (mode != IEEE802154_TX_MODE_DIRECT) {
-#endif
+#endif /* CONFIG_NET_PKT_TIMESTAMP && CONFIG_NET_PKT_TXTIME */
 		LOG_WRN("TX mode %d not supported", mode);
 		return -ENOTSUP;
 	}
@@ -948,14 +948,14 @@ static int b91_tx(const struct device *dev,
 	rf_set_txmode();
 	delay_us(CONFIG_IEEE802154_B91_SET_TXRX_DELAY_US);
 
-#ifdef CONFIG_NET_PKT_TXTIME
+#if defined(CONFIG_NET_PKT_TIMESTAMP) && defined(CONFIG_NET_PKT_TXTIME)
 	if (mode == IEEE802154_TX_MODE_TXTIME_CCA) {
 		uint64_t tx_at = k_ns_to_ticks_near64(net_pkt_txtime(pkt));
 
 		while (k_uptime_ticks() < tx_at) {
 		}
 	}
-#endif
+#endif /* CONFIG_NET_PKT_TIMESTAMP && CONFIG_NET_PKT_TXTIME */
 
 	rf_tx_pkt(b91->tx_buffer);
 	if (b91->event_handler) {
