@@ -505,6 +505,32 @@ ALWAYS_INLINE b91_send_ack(const struct device *dev, const struct ieee802154_fra
 	}
 }
 
+/* API implementation: get_time */
+static uint64_t b91_get_time(const struct device *dev)
+{
+	ARG_UNUSED(dev);
+	uint64_t result = stimer_get_tick();
+#if 0 /* use only 32 bits since timer resolution is close to CPU clocks we should avoid any calculations */
+	static uint64_t get_k_uptime;
+	static bool get_k_uptime_valid;
+
+	uint64_t k_uptime = k_uptime_ticks();
+
+	if (get_k_uptime_valid) {
+		uint64_t up_time = ((k_uptime - get_k_uptime) * SYSTEM_TIMER_TICK_1S) /
+			CONFIG_SYS_CLOCK_TICKS_PER_SEC;
+
+		result |= up_time & 0xffffffff00000000;
+	} else {
+		get_k_uptime = k_uptime;
+		get_k_uptime_valid = true;
+	}
+#endif
+
+	return result / SYSTEM_TIMER_TICK_1US;
+}
+
+
 /* RX IRQ handler */
 static void ALWAYS_INLINE b91_rf_rx_isr(const struct device *dev)
 {
@@ -513,7 +539,7 @@ static void ALWAYS_INLINE b91_rf_rx_isr(const struct device *dev)
 	struct net_pkt *pkt = NULL;
 
 #if defined(CONFIG_NET_PKT_TIMESTAMP) && defined(CONFIG_NET_PKT_TXTIME)
-	uint64_t rx_time = k_ticks_to_us_near64(k_uptime_ticks());
+	uint64_t rx_time = b91_get_time(dev);
 	uint32_t delta_time = (clock_time() - ZB_RADIO_TIMESTAMP_GET(b91->rx_buffer)) /
 		SYSTEM_TIMER_TICK_1US;
 
@@ -951,8 +977,8 @@ static int b91_tx(const struct device *dev,
 
 #if defined(CONFIG_NET_PKT_TIMESTAMP) && defined(CONFIG_NET_PKT_TXTIME)
 	if (mode == IEEE802154_TX_MODE_TXTIME_CCA) {
-		tx_wait_us = net_pkt_txtime(pkt) / NSEC_PER_USEC -
-			k_ticks_to_us_near64(k_uptime_ticks());
+		tx_wait_us = (uint32_t)(net_pkt_txtime(pkt) / NSEC_PER_USEC) -
+			(uint32_t)b91_get_time(dev);
 
 		rf_start_stx(b91->tx_buffer, tx_wait_us * SYSTEM_TIMER_TICK_1US);
 	} else
@@ -1086,6 +1112,7 @@ static struct ieee802154_radio_api b91_radio_api = {
 	.ed_scan = b91_ed_scan,
 	.configure = b91_configure,
 	.get_sch_acc = b91_get_sch_acc,
+	.get_time = b91_get_time,
 };
 
 
