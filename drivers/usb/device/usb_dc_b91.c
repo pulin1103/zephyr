@@ -512,6 +512,7 @@ static uint32_t ep_write(uint8_t ep, const uint8_t *data, uint32_t data_len)
 		}
 
 		if (ep_idx == USBD_EP0_IDX) {
+	        gpio_toggle(GPIO_PB6);
 			ep_ctx->buf.current_len = valid_len;
 			reg_usb_sups_cyc_cali = CTRL_EP_NORMAL_PACKET_REG_VALUE;
 			usbhw_reset_ctrl_ep_ptr();
@@ -520,6 +521,7 @@ static uint32_t ep_write(uint8_t ep, const uint8_t *data, uint32_t data_len)
 				usbhw_write_ctrl_ep_data(data[i]);
 			}
 		} else {
+	        gpio_toggle(GPIO_PB7);
 			usbhw_reset_ep_ptr(ep_idx);
 			for (i = 0; i < valid_len; i++) {
 				reg_usb_ep_dat(ep_idx) = data[i];
@@ -1491,6 +1493,7 @@ int usb_dc_ep_read_wait(uint8_t ep, uint8_t *data, uint32_t max_data_len, uint32
 	k_mutex_lock(&ctx->drv_lock, K_FOREVER);
 
 	if (USB_EP_GET_IDX(ep) == USBD_EP0_IDX) {
+	    gpio_toggle(GPIO_PB4);
 		if (ep_ctx->reading) {
 			ep_ctx->reading = false;
 			bytes_to_copy = MIN(max_data_len, ep_ctx->buf.total_len);
@@ -1500,6 +1503,7 @@ int usb_dc_ep_read_wait(uint8_t ep, uint8_t *data, uint32_t max_data_len, uint32
 			memcpy(data, &ctx->setup, bytes_to_copy);
 		}
 	} else {
+	    gpio_toggle(GPIO_PB5);
 		bytes_to_copy = MIN(max_data_len, ep_ctx->buf.total_len);
 		memcpy(data, ep_ctx->buf.data, bytes_to_copy);
 	}
@@ -1627,6 +1631,11 @@ static void usbd_work_handler(struct k_work *item)
 	struct b91_usbd_ctx *ctx;
 	struct b91_usbd_ep_ctx *ep_ctx;
 	struct usbd_event *ev;
+
+	gpio_function_en(GPIO_PB4|GPIO_PB5|GPIO_PB6|GPIO_PB7);
+	gpio_input_dis(GPIO_PB4|GPIO_PB5|GPIO_PB6|GPIO_PB7);
+	gpio_output_en(GPIO_PB4|GPIO_PB5|GPIO_PB6|GPIO_PB7);
+	gpio_set_high_level(GPIO_PB4|GPIO_PB5|GPIO_PB6|GPIO_PB7);
 
 	ctx = CONTAINER_OF(item, struct b91_usbd_ctx, usb_work);
 	while ((ev = usbd_evt_get()) != NULL) {
