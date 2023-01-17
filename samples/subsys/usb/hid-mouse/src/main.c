@@ -4,7 +4,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-#include <zephyr/kernel.h>
+#include <zephyr/zephyr.h>
 #include <zephyr/device.h>
 #include <zephyr/drivers/gpio.h>
 
@@ -141,6 +141,13 @@ static void x_move(const struct device *gpio, struct gpio_callback *cb,
 	int ret;
 	uint8_t state = status[MOUSE_X_REPORT_POS];
 
+	if (IS_ENABLED(CONFIG_USB_DEVICE_REMOTE_WAKEUP)) {
+		if (usb_status == USB_DC_SUSPEND) {
+			usb_wakeup_request();
+			return;
+		}
+	}
+
 	ret = gpio_pin_get(gpio, sw2.pin);
 	if (ret < 0) {
 		LOG_ERR("Failed to get the state of port %s pin %u, error: %d",
@@ -151,7 +158,7 @@ static void x_move(const struct device *gpio, struct gpio_callback *cb,
 	if (def_val[2] != (uint8_t)ret) {
 		state += 10U;
 	}
-
+	
 	if (status[MOUSE_X_REPORT_POS] != state) {
 		status[MOUSE_X_REPORT_POS] = state;
 		k_sem_give(&sem);
@@ -164,17 +171,17 @@ static void y_move(const struct device *gpio, struct gpio_callback *cb,
 	int ret;
 	uint8_t state = status[MOUSE_Y_REPORT_POS];
 
-	ret = gpio_pin_get(gpio, sw3.pin);
+	ret = gpio_pin_get(gpio, sw0.pin);
 	if (ret < 0) {
 		LOG_ERR("Failed to get the state of port %s pin %u, error: %d",
-			gpio->name, sw3.pin, ret);
+			gpio->name, sw0.pin, ret);
 		return;
 	}
 
 	if (def_val[3] != (uint8_t)ret) {
 		state += 10U;
 	}
-
+	
 	if (status[MOUSE_Y_REPORT_POS] != state) {
 		status[MOUSE_Y_REPORT_POS] = state;
 		k_sem_give(&sem);
@@ -224,7 +231,7 @@ int callbacks_configure(const struct gpio_dt_spec *spec,
 		return ret;
 	}
 
-	ret = gpio_pin_interrupt_configure_dt(spec, GPIO_INT_EDGE_BOTH);
+	ret = gpio_pin_interrupt_configure_dt(spec, GPIO_INT_EDGE_TO_ACTIVE);
 	if (ret < 0) {
 		LOG_ERR("Failed to configure interrupt for port %s pin %u, "
 			"error: %d",
@@ -258,7 +265,7 @@ void main(void)
 		return;
 	}
 
-	if (callbacks_configure(&sw0, &left_button, &callback[0],
+	if (callbacks_configure(&sw0, &y_move, &callback[0],
 				&def_val[0])) {
 		LOG_ERR("Failed configuring left button callback.");
 		return;
