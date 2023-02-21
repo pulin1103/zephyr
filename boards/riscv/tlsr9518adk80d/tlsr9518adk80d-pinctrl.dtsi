@@ -30,11 +30,18 @@
 		pinmux = <B91_PINMUX_SET(B91_PORT_C, B91_PIN_7, B91_FUNC_C)>;
 	};
 
-	/* PWM Channel 0 (PB4) */
+	/* PWM Channel 0 (PD0) */
 
-	pwm_ch0_pb4_default: pwm_ch0_pb4_default {
-		pinmux = <B91_PINMUX_SET(B91_PORT_B, B91_PIN_4, B91_FUNC_B)>;
+	pwm_ch0_pd0_default: pwm_ch0_pd0_default {
+		pinmux = <B91_PINMUX_SET(B91_PORT_D, B91_PIN_0, B91_FUNC_C)>;
 	};
+
+	/* PWM Channel 1 (PD1) */
+
+	pwm_ch1_pd1_default: pwm_ch1_pd1_default {
+		pinmux = <B91_PINMUX_SET(B91_PORT_D, B91_PIN_1, B91_FUNC_C)>;
+	};
+
 
 	/* PSPI: CLK(PC5), MOSI(PC7), MISO(PC6) */
 

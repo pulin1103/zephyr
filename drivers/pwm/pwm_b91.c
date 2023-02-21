@@ -74,7 +74,7 @@ static int pwm_b91_set_cycles(const struct device *dev, uint32_t channel,
 
 	/* set polarity */
 	if (flags & PWM_POLARITY_INVERTED) {
-		pwm_invert_en(channel);
+		pwm_n_invert_en(channel);
 	} else {
 		pwm_invert_dis(channel);
 	}

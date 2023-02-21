@@ -21,7 +21,8 @@
 		led3 = &led_red;
 		sw0 = &key_1;
 		sw2 = &key_3;
-		pwm-led0 = &pwm_led_blue;
+		pwm-led0 = &pwm_led_white;
+		pwm-led1 = &pwm_led_blue;
 		pwm-0 = &pwm0;
 	};
 
@@ -55,6 +56,11 @@
 		pwm_led_blue: pwm_led_0 {
 			pwms = <&pwm0 0 PWM_MSEC(20) PWM_POLARITY_NORMAL>;
 			label = "PWM LED Blue";
+		};
+
+		pwm_led_white: pwm_led_1 {
+			pwms = <&pwm0 1 PWM_MSEC(20) PWM_POLARITY_NORMAL>;
+			label = "PWM LED White";
 		};
 	};
 
@@ -105,27 +111,31 @@
 			label = "mcuboot";
 			reg = <0x00000000 0x10000>;
 		};
-		slot0_partition: partition@10000 {
+		slot0_partition: partition@f0000 {
 			label = "image-0";
+			reg = <0xF0000 0xE0000>;
+		};
+		slot1_partition: partition@10000 {
+			label = "image-1";
 			reg = <0x10000 0xE0000>;
 		};
-		scratch_partition: partition@f0000 {
+		scratch_partition: partition@1d0000 {
 			label = "image-scratch";
-			reg = <0xf0000 0x4000>;
+			reg = <0x1D0000 0x4000>;
 		};
-		factory_partition: partition@f4000 {
+		factory_partition: partition@1d4000 {
 			label = "factory-data";
-			reg = <0xf4000 0x1000>;
+			reg = <0x1D4000 0x1000>;
 		};
-		storage_partition: partition@f5000 {
+		storage_partition: partition@1d5000 {
 			label = "storage";
-			reg = <0xf5000 0xa000>;
-		/* region <0xff000 0x1000> is reserved for Telink B91 SDK's data */
+			reg = <0x1D5000 0x4000>;
 		};
-		slot1_partition: partition@100000 {
-			label = "image-1";
-			reg = <0x100000 0xE0000>;
+		switchflag_partition: partition@1fd000 {
+			label = "switchflag";
+			reg = <0x1FD000 0x1000>;
 		};
+		/* region <0x1fe000 0x2000> is reserved for Telink B91 SDK's data */
 	};
 };
 
@@ -139,6 +149,10 @@
 
 &gpioc {
 	interrupts = <37 1>;
+	status = "okay";
+};
+
+&gpiod {
 	status = "okay";
 };
 
@@ -164,7 +178,7 @@
 &pwm0 {
 	status = "okay";
 	clock-frequency = <93750>;
-	pinctrl-0 = <&pwm_ch0_pb4_default>;
+	pinctrl-0 = <&pwm_ch0_pd0_default &pwm_ch1_pd1_default>;
 	pinctrl-names = "default";
 };
 
