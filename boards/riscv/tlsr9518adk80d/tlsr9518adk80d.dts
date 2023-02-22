@@ -131,6 +131,10 @@
 			label = "storage";
 			reg = <0x1D5000 0x4000>;
 		};
+		factoryresetflag_partition: partition@1d9000 {
+			label = "factoryresetflag";
+			reg = <0x1D9000 0x1000>;
+		};
 		switchflag_partition: partition@1fd000 {
 			label = "switchflag";
 			reg = <0x1FD000 0x1000>;
