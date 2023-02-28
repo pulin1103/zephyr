@@ -14,7 +14,19 @@
 #include <zephyr/device.h>
 #include <zephyr/drivers/pwm.h>
 
+/* device tree compatibility macros */
+#define DT_DEBRACKET_INTERNAL(...) __VA_ARGS__
+#define DT_FOREACH_CHILD_STATUS_OKAY_SEP(node_id, fn, sep) \
+	DT_CAT(node_id, _FOREACH_CHILD_STATUS_OKAY_SEP)(fn, sep)
+
 static const struct pwm_dt_spec pwm_led0 = PWM_DT_SPEC_GET(DT_ALIAS(pwm_led0));
+
+#if DT_NODE_EXISTS(DT_PATH_INTERNAL(pwm_leds))
+static const struct pwm_dt_spec pwm_leds[] = {
+			DT_FOREACH_CHILD_STATUS_OKAY_SEP(DT_PATH_INTERNAL(pwm_leds),
+				PWM_DT_SPEC_GET, (,))
+		};
+#endif /* DT_NODE_EXISTS(DT_PATH_INTERNAL(pwm_leds)) */
 
 #define MIN_PERIOD PWM_SEC(1U) / 128U
 #define MAX_PERIOD PWM_SEC(1U)
@@ -32,6 +44,28 @@ void main(void)
 		printk("Error: PWM device %s is not ready\n",
 		       pwm_led0.dev->name);
 		return;
+	}
+
+#if DT_NODE_EXISTS(DT_PATH_INTERNAL(pwm_leds))
+	for (size_t i = 0; i < ARRAY_SIZE(pwm_leds); i++) {
+		printk("led[%u] %u, %u, %x\n", i, pwm_leds[i].channel, pwm_leds[i].period, pwm_leds[i].flags);
+	}
+#endif /* DT_NODE_EXISTS(DT_PATH_INTERNAL(pwm_leds)) */
+
+	k_sleep(K_SECONDS(3U));
+
+	uint32_t width = 0;
+
+	for (;;) {
+		printk("pwm width %u\n", width);
+		pwm_set_pulse_dt(&pwm_led0, width);
+
+		width += pwm_led0.period / 10;
+		if (width > pwm_led0.period) {
+			width = 0;
+		}
+
+		k_sleep(K_SECONDS(2U));
 	}
 
 	/*
