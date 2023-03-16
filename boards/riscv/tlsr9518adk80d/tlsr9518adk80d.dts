@@ -111,33 +111,29 @@
 			label = "mcuboot";
 			reg = <0x00000000 0x10000>;
 		};
-		slot0_partition: partition@f0000 {
+		slot0_partition: partition@10000 {
 			label = "image-0";
-			reg = <0xF0000 0xE0000>;
-		};
-		slot1_partition: partition@10000 {
-			label = "image-1";
 			reg = <0x10000 0xE0000>;
 		};
-		scratch_partition: partition@1d0000 {
+		scratch_partition: partition@f0000 {
 			label = "image-scratch";
-			reg = <0x1D0000 0x4000>;
+			reg = <0xF0000 0x4000>;
 		};
-		factory_partition: partition@1d4000 {
+		factory_partition: partition@f4000 {
 			label = "factory-data";
-			reg = <0x1D4000 0x1000>;
+			reg = <0xF4000 0x1000>;
 		};
-		storage_partition: partition@1d5000 {
+		storage_partition: partition@f5000 {
 			label = "storage";
-			reg = <0x1D5000 0x4000>;
+			reg = <0xF5000 0xa000>;
 		};
-		factoryresetflag_partition: partition@1d9000 {
+		factoryresetflag_partition: partition@ff000 {
 			label = "factoryresetflag";
-			reg = <0x1D9000 0x1000>;
+			reg = <0xFF000 0x1000>;
 		};
-		switchflag_partition: partition@1fd000 {
-			label = "switchflag";
-			reg = <0x1FD000 0x1000>;
+		slot1_partition: partition@100000 {
+			label = "image-1";
+			reg = <0x100000 0xE0000>;
 		};
 		/* region <0x1fe000 0x2000> is reserved for Telink B91 SDK's data */
 	};
