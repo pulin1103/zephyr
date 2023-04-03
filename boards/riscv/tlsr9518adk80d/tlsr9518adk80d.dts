@@ -149,7 +149,7 @@
 &uart0 {
 	status = "okay";
 	current-speed = <115200>;
-	pinctrl-0 = <&uart0_tx_pb2_default &uart0_rx_pb3_default>;
+	pinctrl-0 = <&uart0_tx_pa3_default &uart0_rx_pa4_default>;
 	pinctrl-names = "default";
 };
 
@@ -175,12 +175,12 @@
 	pinctrl-names = "default";
 };
 
-&hspi {
+/*&hspi {
 	status = "okay";
 	cs0-pin = "HSPI_CSN_PA1";
 	pinctrl-0 = <&hspi_clk_pa2_default &hspi_miso_pa3_default &hspi_mosi_pa4_default>;
 	pinctrl-names = "default";
-};
+};*/
 
 &i2c {
 	status = "okay";
