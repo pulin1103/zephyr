@@ -1,9 +1,9 @@
-# Config options for OpenThread Border Router sample app
+# Config options for OpenThread sample app
 
 # Copyright (c) 2020 Tridonic GmbH & Co KG
 # SPDX-License-Identifier: Apache-2.0
 
-mainmenu "OpenThread NCP"
+mainmenu "OpenThread CLI"
 
 menu "Application configuration"
 
