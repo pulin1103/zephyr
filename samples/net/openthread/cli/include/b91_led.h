@@ -8,7 +8,7 @@ extern "C" {
 #define LED_PIN_6 6
 
 int LED_Init();
-int LED_Toggle();
+void LED_Toggle();
 
 #ifdef __cplusplus
 }
