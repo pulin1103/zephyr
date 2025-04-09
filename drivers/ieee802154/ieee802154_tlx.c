@@ -545,11 +545,11 @@ ALWAYS_INLINE tlx_handle_ack(const struct device *dev,
 
 	do {
 		if (!ack_pkt) {
-			LOG_ERR("No free packet available.");
+			// LOG_ERR("No free packet available.");
 			break;
 		}
 		if (net_pkt_write(ack_pkt, buf, buf_len) < 0) {
-			LOG_ERR("Failed to write to a packet.");
+			// LOG_ERR("Failed to write to a packet.");
 			break;
 		}
 		tlx_update_rssi_and_lqi(dev, ack_pkt);
@@ -558,7 +558,7 @@ ALWAYS_INLINE tlx_handle_ack(const struct device *dev,
 #endif /* CONFIG_NET_PKT_TIMESTAMP && CONFIG_NET_PKT_TXTIME */
 		net_pkt_cursor_init(ack_pkt);
 		if (ieee802154_handle_ack(tlx->iface, ack_pkt) != NET_OK) {
-			LOG_INF("ACK packet not handled - releasing.");
+			// LOG_INF("ACK packet not handled - releasing.");
 		}
 		k_sem_give(&tlx->ack_wait);
 	} while (0);
@@ -615,7 +615,7 @@ ALWAYS_INLINE tlx_send_ack(const struct device *dev, struct ieee802154_frame *fr
 				&ack_buf[ack_len - 4], 4)) {
 				tlx_mac_keys_frame_cnt_inc(tlx->mac_keys, 1);
 			} else {
-				LOG_WRN("encrypt ack failed");
+				// LOG_WRN("encrypt ack failed");
 			}
 		} else {
 			delay_us(CONFIG_IEEE802154_TLX_SET_TXRX_DELAY_US);
@@ -626,7 +626,7 @@ ALWAYS_INLINE tlx_send_ack(const struct device *dev, struct ieee802154_frame *fr
 		tlx_set_tx_payload(dev, ack_buf, ack_len);
 		rf_tx_pkt(tlx->tx_buffer);
 	} else {
-		LOG_ERR("Failed to create ACK.");
+		// LOG_ERR("Failed to create ACK.");
 	}
 }
 
@@ -667,7 +667,7 @@ static void ALWAYS_INLINE tlx_rf_rx_isr(const struct device *dev)
 		uint8_t length = tlx->rx_buffer[TLX_LENGTH_OFFSET];
 
 		if ((length < TLX_PAYLOAD_MIN) || (length > TLX_PAYLOAD_MAX)) {
-			LOG_ERR("Invalid length.\n");
+			// LOG_ERR("Invalid length.\n");
 			if (tlx->event_handler) {
 				enum ieee802154_rx_fail_reason reason =
 					IEEE802154_RX_FAIL_NOT_RECEIVED;
@@ -687,7 +687,7 @@ static void ALWAYS_INLINE tlx_rf_rx_isr(const struct device *dev)
 			tlx_ieee802154_frame_parse(payload, length, &frame);
 		}
 		if (!frame.general.valid) {
-			LOG_ERR("Invalid frame\n");
+			// LOG_ERR("Invalid frame\n");
 			if (tlx->event_handler) {
 				enum ieee802154_rx_fail_reason reason =
 					IEEE802154_RX_FAIL_NOT_RECEIVED;
@@ -771,7 +771,7 @@ static void ALWAYS_INLINE tlx_rf_rx_isr(const struct device *dev)
 		}
 		pkt = net_pkt_rx_alloc_with_buffer(tlx->iface, length, AF_UNSPEC, 0, K_NO_WAIT);
 		if (!pkt) {
-			LOG_ERR("No pkt available.");
+			// LOG_ERR("No pkt available.");
 			if (tlx->event_handler) {
 				enum ieee802154_rx_fail_reason reason =
 					IEEE802154_RX_FAIL_OTHER;
@@ -783,7 +783,7 @@ static void ALWAYS_INLINE tlx_rf_rx_isr(const struct device *dev)
 		}
 		net_pkt_set_ieee802154_ack_fpb(pkt, frame_pending);
 		if (net_pkt_write(pkt, payload, length)) {
-			LOG_ERR("Failed to write to a packet.");
+			// LOG_ERR("Failed to write to a packet.");
 			if (tlx->event_handler) {
 				enum ieee802154_rx_fail_reason reason =
 					IEEE802154_RX_FAIL_OTHER;
@@ -799,7 +799,7 @@ static void ALWAYS_INLINE tlx_rf_rx_isr(const struct device *dev)
 #endif /* CONFIG_NET_PKT_TIMESTAMP && CONFIG_NET_PKT_TXTIME */
 		status = net_recv_data(tlx->iface, pkt);
 		if (status < 0) {
-			LOG_ERR("RCV Packet dropped by NET stack: %d", status);
+			// LOG_ERR("RCV Packet dropped by NET stack: %d", status);
 			if (tlx->event_handler) {
 				enum ieee802154_rx_fail_reason reason =
 					IEEE802154_RX_FAIL_OTHER;
@@ -1099,7 +1099,7 @@ static int tlx_tx(const struct device *dev,
 #else
 	if (mode != IEEE802154_TX_MODE_DIRECT) {
 #endif /* CONFIG_NET_PKT_TIMESTAMP && CONFIG_NET_PKT_TXTIME */
-		LOG_WRN("TX mode %d not supported", mode);
+		// LOG_WRN("TX mode %d not supported", mode);
 		return -ENOTSUP;
 	}
 
@@ -1120,7 +1120,7 @@ static int tlx_tx(const struct device *dev,
 	do {
 
 		if (net_pkt_ieee802154_mac_hdr_rdy(pkt)) {
-			LOG_WRN("The packet is encrypted and sent directly\n");
+			// LOG_WRN("The packet is encrypted and sent directly\n");
 			break;
 		}
 
@@ -1128,7 +1128,7 @@ static int tlx_tx(const struct device *dev,
 		net_pkt_set_ieee802154_mac_hdr_rdy(pkt, false);
 
 		if (!frame.general.valid) {
-			LOG_WRN("invalid frame\n");
+			// LOG_WRN("invalid frame\n");
 			break;
 		}
 
@@ -1149,7 +1149,7 @@ static int tlx_tx(const struct device *dev,
 			tlx->filter_ieee_addr;
 
 		if (!src_addr) {
-			LOG_WRN("no extended source address");
+			// LOG_WRN("no extended source address");
 			break;
 		}
 
@@ -1176,7 +1176,7 @@ static int tlx_tx(const struct device *dev,
 
 		if (!key) {
 			key_id = 0;
-			LOG_WRN("security key not found");
+			// LOG_WRN("security key not found");
 			break;
 		}
 
@@ -1213,7 +1213,7 @@ static int tlx_tx(const struct device *dev,
 						private_data : NULL;
 				} else {
 					key_id = 0;
-					LOG_WRN("invalid payload length MIC");
+					// LOG_WRN("invalid payload length MIC");
 					break;
 				}
 
@@ -1227,7 +1227,7 @@ static int tlx_tx(const struct device *dev,
 								private_data : NULL;
 					} else {
 						key_id = 0;
-						LOG_WRN("invalid payload length IE");
+						// LOG_WRN("invalid payload length IE");
 						break;
 					}
 
@@ -1245,7 +1245,7 @@ static int tlx_tx(const struct device *dev,
 								private_data : NULL;
 					} else {
 						key_id = 0;
-						LOG_WRN("invalid payload length CID");
+						// LOG_WRN("invalid payload length CID");
 						break;
 					}
 				}
@@ -1261,14 +1261,14 @@ static int tlx_tx(const struct device *dev,
 							tag_data - private_data : 0,
 						private_data, tag_data, tag_len)) {
 					key_id = 0;
-					LOG_WRN("encrypt failed %u", sec_level);
+					// LOG_WRN("encrypt failed %u", sec_level);
 				}
 
 			} while (0);
 			break;
 		default:
 			key_id = 0;
-			LOG_WRN("unsupported security level %u", sec_level);
+			// LOG_WRN("unsupported security level %u", sec_level);
 			break;
 		}
 
@@ -1437,8 +1437,8 @@ static int tlx_configure(const struct device *dev,
 					tlx->mac_keys->item[i].key_id =
 						*config->mac_keys[i].key_id;
 				} else {
-					LOG_WRN("can't save key id %u",
-						*config->mac_keys[i].key_id);
+					// LOG_WRN("can't save key id %u",
+						// *config->mac_keys[i].key_id);
 				}
 			}
 		}
@@ -1448,7 +1448,7 @@ static int tlx_configure(const struct device *dev,
 		break;
 #endif
 	default:
-		LOG_WRN("Unhandled cfg %d", type);
+		// LOG_WRN("Unhandled cfg %d", type);
 		result = -ENOTSUP;
 		break;
 	}
